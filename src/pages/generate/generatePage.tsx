@@ -248,6 +248,7 @@ export const generatePage = () => {
                             <TooltipTrigger>
                                 <Button
                                     className="h-full w-full "
+                                    onClick={generatePrompt}
                                     variant="outline"
                                 >
                                     Авто
