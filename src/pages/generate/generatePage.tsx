@@ -147,6 +147,7 @@ export const generatePage = () => {
         try {
             const formData = new FormData();
             formData.append("sketch", selectedFile);
+            formData.append("base", promptRef.current!.value);
 
             const response = await fetch("api/generate_prompt/", {
                 method: "POST",
