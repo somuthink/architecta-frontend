@@ -138,6 +138,37 @@ export const generatePage = () => {
         }
     };
 
+    const generatePrompt = async () => {
+        if (!selectedFile) {
+            alert("No file selected!");
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+            formData.append("sketch", selectedFile);
+
+            const response = await fetch("api/generate_prompt/", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "bypass-tunnel-reminder": "true",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            promptRef.current!.value = await response.text();
+
+            return response;
+        } catch (error) {
+            console.error("Error generating prompt:", error);
+            return null;
+        }
+    };
+
     const generateImage = async () => {
         if (!selectedFile) {
             alert("No file selected!");
