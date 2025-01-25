@@ -6,7 +6,7 @@ export default defineConfig({
     server: {
         proxy: {
             "/api/": {
-                target: "https://solid-fans-unite.loca.lt",
+                target: "http://0.0.0.0:8000",
                 changeOrigin: true,
                 secure: false,
             },
