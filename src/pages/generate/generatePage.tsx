@@ -4,7 +4,7 @@ import { SearchStyles, type Style } from "@/components/inputs/searchStyles";
 import { ZoomableImage } from "@/components/images/zoomableImage";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Upload, Search } from "lucide-react";
+import { Upload } from "lucide-react";
 import {
     Carousel,
     CarouselContent,
@@ -252,7 +252,7 @@ export const generatePage = () => {
                 <div className="w-full flex  flex-col lg:flex-row md:flex-row   gap-1">
                     <Input
                         className="w-full "
-                        placeholder="Введите запрос"
+                        placeholder="Пожелания или уточнения (желтые стены, зимняя погода...)"
                         ref={promptRef}
                     />{" "}
                     <TooltipProvider>

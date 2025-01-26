@@ -1,6 +1,6 @@
 import { Search, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
     Command,
@@ -36,6 +36,21 @@ export const SearchStyles = ({
 }: Props) => {
     const [open, setOpen] = useState(false);
 
+    const handleKeydown = (e: KeyboardEvent) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+            e.preventDefault();
+            setOpen(true);
+        }
+    };
+
+    useEffect(() => {
+        window.addEventListener("keydown", handleKeydown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeydown);
+        };
+    }, []);
+
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -64,7 +79,7 @@ export const SearchStyles = ({
                                 <CommandItem
                                     key={style.label}
                                     value={style.label}
-                                    onSelect={(currentValue) => {
+                                    onSelect={() => {
                                         setSelectedStyle(style);
                                         setOpen(false);
                                     }}
