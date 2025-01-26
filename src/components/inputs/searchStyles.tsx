@@ -58,7 +58,7 @@ export const SearchStyles = ({
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-[200px] justify-start  truncate gap-2 "
+                    className="w-1/2 lg:w-auto md:w-auto lg:justify-start md:justify-start  truncate gap-2 "
                 >
                     <Search className="opacity-50" size={18} />
 
