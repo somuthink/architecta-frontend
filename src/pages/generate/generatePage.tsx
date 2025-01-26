@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { InputImage } from "../../components/inputs/imageInput";
+import { InputImage } from "@/components/inputs/imageInput";
+import { SearchStyles, type Style } from "@/components/inputs/searchStyles";
 import { ZoomableImage } from "@/components/images/zoomableImage";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Upload, Search } from "lucide-react";
 import {
     Carousel,
     CarouselContent,
@@ -19,14 +21,19 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import res1 from "../../assets/res1.png";
-import res2 from "../../assets/res2.png";
-import res3 from "../../assets/res3.png";
-
-interface Style {
-    name: string;
-    imageUrl: string;
-}
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 
 export const generatePage = () => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -36,8 +43,9 @@ export const generatePage = () => {
     const [error, setError] = useState<string | null>(null);
 
     const [api, setApi] = useState<CarouselApi>();
-    const [styleFile, setStyleFile] = useState<File | null>(null);
-    const [currentStyle, setCurrentStyle] = useState(0);
+    const [selectedStyle, setSelectedStyle] = useState<Style>(0);
+    const styleInputRef = useRef<HTMLInputElement | null>(null);
+    const [uploadCompleted, setUploadCompleted] = useState(false);
 
     const promptRef = useRef<HTMLInputElement | null>(null);
 
@@ -51,12 +59,8 @@ export const generatePage = () => {
             return;
         }
 
-        setCurrentStyle(api.selectedScrollSnap());
-
-        api.on("select", () => {
-            setCurrentStyle(api.selectedScrollSnap());
-        });
-    }, [api]);
+        api.scrollTo(selectedStyle.index - 1);
+    }, [selectedStyle]);
 
     useEffect(() => {
         const fetchStyles = async () => {
@@ -75,7 +79,7 @@ export const generatePage = () => {
                 const styleNames: string[] = await response.json();
 
                 const stylesWithImages: Style[] = await Promise.all(
-                    styleNames.map(async (styleName) => {
+                    styleNames.map(async (styleName, index) => {
                         const imageResponse = await fetch(
                             `api/get_style/?name=${encodeURIComponent(styleName)}`,
                             {
@@ -91,9 +95,11 @@ export const generatePage = () => {
                             );
                         }
 
+                        const [label, _] = styleName.split(".");
+
                         const imageBlob = await imageResponse.blob();
                         const imageUrl = URL.createObjectURL(imageBlob);
-                        return { name: styleName, imageUrl };
+                        return { name: styleName, label, imageUrl, index };
                     }),
                 );
 
@@ -107,17 +113,18 @@ export const generatePage = () => {
         };
 
         fetchStyles();
-    }, []);
+    }, [uploadCompleted]);
 
-    const handleUpload = async () => {
-        if (!styleFile) {
+    const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) {
             alert("No file selected!");
             return;
         }
 
         try {
             const formData = new FormData();
-            formData.append("image", styleFile);
+            formData.append("image", file);
 
             const response = await fetch("api/load_style/", {
                 method: "POST",
@@ -133,6 +140,8 @@ export const generatePage = () => {
 
             const result = await response.json();
             console.log("File uploaded successfully:", result);
+
+            setUploadCompleted((prev) => !prev);
         } catch (error) {
             console.error("Error uploading file:", error);
         }
@@ -161,12 +170,14 @@ export const generatePage = () => {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
 
-            promptRef.current!.value = await response.text();
+            promptRef.current!.value = (await response.text()).replace('"', "");
+            promptRef.current!.className =
+                promptRef.current!.className + " border-indigo-500";
 
             return response;
         } catch (error) {
-            console.error("Error generating prompt:", error);
-            return null;
+            alert("Error generating prompt");
+            return;
         }
     };
 
@@ -179,7 +190,7 @@ export const generatePage = () => {
         try {
             const formData = new FormData();
             formData.append("sketch", selectedFile);
-            formData.append("style_name", `${currentStyle}.jpg`);
+            formData.append("style_name", selectedStyle.name);
             formData.append("prompt", promptRef.current!.value);
             formData.append("width", "1080");
             formData.append("height", "720");
@@ -230,7 +241,7 @@ export const generatePage = () => {
     };
     return (
         <div className="flex items-center lg:justify-center h-full lg:flex-row flex-col   lg:gap-20 md:gap-4  w-full lg:p-20 md:p-10  ">
-            <div className="lg:w-2/5 w-full md:w-full flex flex-col gap-4">
+            <div className="lg:w-2/5 w-full md:w-full flex flex-col gap-6">
                 <InputImage
                     dragSize={32}
                     title="Загрузить эскиз"
@@ -277,36 +288,64 @@ export const generatePage = () => {
                     </div>
                 )}
                 {!loading && !error && styles.length > 0 && (
-                    <Carousel
-                        setApi={setApi}
-                        className="w-full"
-                        opts={{ startIndex: 1 }}
-                    >
-                        <CarouselContent>
-                            <CarouselItem key={0} className=" ">
-                                <InputImage
-                                    className="h-full"
-                                    dragSize={64}
-                                    button={handleUpload}
-                                    title="Загрузить стиль"
-                                    selectedFile={styleFile}
-                                    setSelectedFile={setStyleFile}
-                                ></InputImage>
-                            </CarouselItem>
-
-                            {styles.map((style) => (
-                                <CarouselItem key={style.name} className=" ">
-                                    <img
-                                        className="w-full h-full  aspect-video object-cover rounded-md"
-                                        src={style.imageUrl}
-                                        alt={style.name}
-                                    />
-                                </CarouselItem>
-                            ))}
-                        </CarouselContent>
-                        <CarouselPrevious />
-                        <CarouselNext />
-                    </Carousel>
+                    <div className="flex flex-col gap-2">
+                        <Carousel
+                            setApi={setApi}
+                            className="w-full h-full"
+                            opts={{ startIndex: 1 }}
+                        >
+                            <CarouselContent className="h-full">
+                                {styles.map((style) => (
+                                    <CarouselItem
+                                        key={style.index}
+                                        className="basis-1/3 "
+                                    >
+                                        <img
+                                            className={`basis-1/3 h-32 aspect-video object-cover rounded-md ${
+                                                selectedStyle.index ===
+                                                style.index
+                                                    ? "border-4 border-blue-500"
+                                                    : ""
+                                            }`}
+                                            src={style.imageUrl}
+                                            alt={style.name}
+                                            onClick={() => {
+                                                setSelectedStyle(style);
+                                            }}
+                                        />
+                                        <h1 className="w-full text-gray-500 items-center justify-center text-center truncate">
+                                            {style.label}
+                                        </h1>
+                                    </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                            <CarouselPrevious />
+                            <CarouselNext />
+                        </Carousel>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                className="gap-2"
+                                onClick={() => {
+                                    styleInputRef.current!.click();
+                                }}
+                            >
+                                <Upload className="opacity-50" size={18} />
+                                Загрузить
+                            </Button>
+                            <input
+                                type="file"
+                                ref={styleInputRef}
+                                style={{ display: "none" }}
+                                onChange={handleUpload}
+                            />
+                            <SearchStyles
+                                styles={styles}
+                                selectedStyle={selectedStyle}
+                                setSelectedStyle={setSelectedStyle}
+                            />
+                        </div>
+                    </div>
                 )}
             </div>
 
