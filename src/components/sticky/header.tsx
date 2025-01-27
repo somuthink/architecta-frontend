@@ -42,7 +42,7 @@ ListItem.displayName = "ListItem";
 
 export const Header = () => {
     return (
-        <NavigationMenu className="absolute mx-20  ">
+        <NavigationMenu className="absolute lg:mx-20 mx-4 rounded-lg border px-2 py-1  ">
             <NavigationMenuList className="">
                 <NavigationMenuItem>
                     <NavigationMenuTrigger>Справка</NavigationMenuTrigger>

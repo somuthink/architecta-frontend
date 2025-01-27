@@ -245,7 +245,7 @@ export const generatePage = () => {
     return (
         <>
             <Header />
-            <div className="flex  items-center lg:justify-center h-full lg:flex-row flex-col   lg:gap-20  gap-4  w-full   lg:py-18 lg:px-20 py-24 px-4  ">
+            <div className="flex  items-center lg:justify-between h-full lg:flex-row flex-col   lg:gap-20  gap-4  w-full   lg:py-18 lg:px-20 py-24 px-4  ">
                 <div className="lg:w-2/5 w-full md:w-full flex flex-col gap-6">
                     <InputImage
                         dragSize={32}
